@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade & Audio Hub</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #a855f7;
+            --primary-hover: #c084fc;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            flex: 1;
+            min-width: 320px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            text-align: center;
+            width: 100%;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+        }
+
+        /* --- Arcade Game Styles --- */
+        #gameCanvas {
+            background-color: #020617;
+            border: 4px solid var(--primary);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+
+        .game-controls {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .score-board {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        /* --- Audio Player Styles --- */
+        .player-ui {
+            width: 100%;
+            text-align: center;
+        }
+
+        .track-info {
+            margin-bottom: 20px;
+        }
+
+        .track-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .track-artist {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .playback-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            flex: 1;
+            background: #334155;
+            height: 6px;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.1s linear;
+        }
+
+        .time {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            min-width: 35px;
+        }
+
+        .player-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 2px solid var(--text-dim);
+            color: var(--text);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .playlist {
+            width: 100%;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+        }
+
+        .playlist-item {
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .playlist-item:hover {
+            background-color: #334155;
+        }
+
+        .playlist-item.active {
+            background-color: rgba(168, 85, 247, 0.2);
+            color: var(--primary-hover);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Arcade & Audio Hub</h1>
+
+    <div class="container">
+        <!-- ARCADE CARD -->
+        <div class="card">
+            <h2>🕹️ Retro Snake Game</h2>
+            <div class="score-board">Score: <span id="score">0</span></div>
+            <canvas id="gameCanvas" width="300" height="300"></canvas>
+            <div class="game-controls">
+                <button class="btn" id="startBtn">Start Game</button>
+                <p style="color: var(--text-dim); font-size: 0.85rem; margin-top: 10px;">Use Up, Down, Left, Right arrow keys to steer.</p>
+            </div>
+        </div>
+
+        <!-- AUDIO PLAYER CARD -->
+        <div class="card">
+            <h2>🎵 Audio Player</h2>
+            <div class="player-ui">
+                <div class="track-info">
+                    <div class="track-title" id="trackTitle">Loading...</div>
+                    <div class="track-artist" id="trackArtist">Artist</div>
+                </div>
+
+                <div class="playback-bar">
+                    <span class="time" id="currentTime">0:00</span>
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <span class="time" id="duration">0:00</span>
+                </div>
+
+                <div class="player-btns">
+                    <button class="icon-btn" id="prevBtn">⏮</button>
+                    <button class="icon-btn" id="playBtn" style="font-size: 1.5rem; width: 55px; height: 55px;">▶</button>
+                    <button class="icon-btn" id="nextBtn">⏭</button>
+                </div>
+
+                <ul class="playlist" id="playlist">
+                    <!-- Dynamic Items Injecting Here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           1. RETRO SNAKE GAME LOGIC
+           ========================================================================== */
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const startBtn = document.getElementById('startBtn');
+
+        const grid = 15;
+        let count = 0;
+        let score = 0;
+        let gameLoopId = null;
+
+        let snake = {
+            x: 150,
+            y: 150,
+            dx: grid,
+            dy: 0,
+            cells: [],
+            maxCells: 4
+        };
+
+        let apple = { x: 60, y: 60 };
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+        function resetGame() {
+            score = 0;
+            scoreElement.textContent = score;
+            snake.x = 150;
+            snake.y = 150;
+            snake.cells = [];
+            snake.maxCells = 4;
+            snake.dx = grid;
+            snake.dy = 0;
+            apple.x = getRandomInt(0, 20) * grid;
+            apple.y = getRandomInt(0, 20) * grid;
+        }
+
+        function gameLoop() {
+            gameLoopId = requestAnimationFrame(gameLoop);
+
+            // Cap the frame rate to 10 FPS for a retro snake feel
+            if (++count < 6) return;
+            count = 0;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Move snake
+            snake.x += snake.dx;
+            snake.y += snake.dy;
+
+            // Handle edge wrapping
+            if (snake.x < 0) snake.x = canvas.width - grid;
+            else if (snake.x >= canvas.width) snake.x = 0;
+            
+            if (snake.y < 0) snake.y = canvas.height - grid;
+            else if (snake.y >= canvas.height) snake.y = 0;
+
+            // Keep track of where snake has been
+            snake.cells.unshift({ x: snake.x, y: snake.y });
+
+            // Remove cells as we move away from them
+            if (snake.cells.length > snake.maxCells) {
+                snake.cells.pop();
+            }
+
+            // Draw apple
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(apple.x, apple.y, grid - 1, grid - 1);
+
+            // Draw snake
+            ctx.fillStyle = '#10b981';
+            snake.cells.forEach(function(cell, index) {
+                // Alternating pattern for head and tail
+                if (index === 0) ctx.fillStyle = '#34d399';
+                else ctx.fillStyle = '#10b981';
+
+                ctx.fillRect(cell.x, cell.y, grid - 1, grid - 1);
+
+                // Snake ate apple
+                if (cell.x === apple.x && cell.y === apple.y) {
+                    snake.maxCells++;
+                    score += 10;
+                    scoreElement.textContent = score;
+                    apple.x = getRandomInt(0, 20) * grid;
+                    apple.y = getRandomInt(0, 20) * grid;
+                }
+            });
+
+            // Check collision with self
+            for (let i = 1; i < snake.cells.length; i++) {
+                if (snake.x === snake.cells[i].x && snake.y === snake.cells[i].y) {
+                    cancelAnimationFrame(gameLoopId);
+                    alert('Game Over! Your score: ' + score);
+                    resetGame();
+                }
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp' && snake.dy === 0) {
+                snake.dx = 0;
+                snake.dy = -grid;
+            } else if (e.key === 'ArrowDown' && snake.dy === 0) {
+                snake.dx = 0;
+                snake.dy = grid;
+            } else if (e.key === 'ArrowLeft' && snake.dx === 0) {
+                snake.dx = -grid;
+                snake.dy = 0;
+            } else if (e.key === 'ArrowRight' && snake.dx === 0) {
+                snake.dx = grid;
+                snake.dy = 0;
+            }
+        });
+
+        startBtn.addEventListener('click', function() {
+            resetGame();
+            gameLoop();
+            startBtn.textContent = 'Game Running...';
+            startBtn.disabled = true;
+            setTimeout(() => {
+                startBtn.textContent = 'Start Game';
+                startBtn.disabled = false;
+            }, 100);
+        });
+
+        /* ==========================================================================
+           2. AUDIO PLAYER LOGIC
+           ========================================================================== */
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const trackTitle = document.getElementById('trackTitle');
+        const trackArtist = document.getElementById('trackArtist');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+        const playlistEl = document.getElementById('playlist');
+
+        const playlist = [
+            {
+                title: 'Summer Vibes',
+                artist: 'Chill Beats',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+            },
+            {
+                title: 'Night Drive',
+                artist: 'Synthwave Dreams',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+            },
+            {
+                title: 'Morning Glory',
+                artist: 'Jazz Collective',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
+            },
+            {
+                title: 'Cosmic Journey',
+                artist: 'Space Odyssey',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'
+            },
+            {
+                title: 'Urban Pulse',
+                artist: 'City Lights',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
+            }
+        ];
+
+        let currentTrack = 0;
+        let audio = null;
+        let isPlaying = false;
+
+        function initAudio() {
+            if (audio) audio.pause();
+            audio = new Audio(playlist[currentTrack].src);
+            updateTrackInfo();
+            renderPlaylist();
+        }
+
+        function updateTrackInfo() {
+            trackTitle.textContent = playlist[currentTrack].title;
+            trackArtist.textContent = playlist[currentTrack].artist;
+        }
+
+        function renderPlaylist() {
+            playlistEl.innerHTML = '';
+            playlist.forEach((track, index) => {
+                const li = document.createElement('li');
+                li.className = `playlist-item ${index === currentTrack ? 'active' : ''}`;
+                li.innerHTML = `
+                    <span>${index + 1}. ${track.title}</span>
+                    <span>${track.artist}</span>
+                `;
+                li.addEventListener('click', () => {
+                    currentTrack = index;
+                    initAudio();
+                    play();
+                });
+                playlistEl.appendChild(li);
+            });
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function play() {
+            audio.play();
+            isPlaying = true;
+            playBtn.textContent = '⏸';
+        }
+
+        function pause() {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = '▶';
+        }
+
+        playBtn.addEventListener('click', () => {
+            isPlaying ? pause() : play();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            currentTrack = (currentTrack - 1 + playlist.length) % playlist.length;
+            initAudio();
+            play();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentTrack = (currentTrack + 1) % playlist.length;
+            initAudio();
+            play();
+        });
+
+        audio.addEventListener('timeupdate', () => {
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            durationEl.textContent = formatTime(audio.duration);
+            progressBar.style.width = (audio.currentTime / audio.duration) * 100 + '%';
+        });
+
+        audio.addEventListener('ended', () => {
+            currentTrack = (currentTrack + 1) % playlist.length;
+            initAudio();
+            play();
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        });
+
+        // Initialize
+        initAudio();
+    </script>
+
+</body>
+</html>
